@@ -55,7 +55,9 @@ export class Game{
 		this.currentWord = randomWord;
 		this.lastChar = randomWord.slice(-1);
 
-		this.nextTurn();
+    if (this.players[0]?.dead || this.players[0]?.afk) {
+      this.nextTurn();
+    }
 	}
 
 	gameEnd(){
@@ -68,7 +70,7 @@ export class Game{
 
 	// add player bisa untuk reconnect
 	addPlayer({ id, name }: { id: string; name: string}): {success: boolean, message?: string}{
-		const existing = this.players.find(p => p.id === id);
+		const existing = this.players[turnIndex]?.id === id;
 		if(existing){
 			return {success: true}
 		}
@@ -100,20 +102,33 @@ export class Game{
 			return this.turnIndex;
 		}
 
-		do{
-			this.turnIndex = (this.turnIndex + 1) % players.length;
-		} while (players[this.turnIndex]?.dead || players[this.turnIndex]?.afk){
-			this.turnIndex = (this.turnIndex + 1) % players.length;
-		}
+    do {
+      this.turnIndex = (this.turnIndex + 1) % this.players.length;
+      attempts++;
+    } while (
+      (this.players[this.turnIndex]?.dead || this.players[this.turnIndex]?.afk) && 
+      attempts < this.players.length
+    );
 
 		return this.turnIndex;
 	}
 
-	submitAnswer(answer: string): {success: boolean, message?: string}{
+	submitAnswer(id: string, answer: string): {success: boolean, message?: string}{
+    const player = this.players.find(p => p.id === id);
+    const activePlayer = this.players[this.turnIndex];
+    if(!player){
+      return {success: false, message: "Player tidak valid"}
+    }
+
+    if(activePlayer.id !== id){
+      return {success: false, message: "Bukan giliranmu"}
+    }
+
 		const userWord = answer.toLowerCase();
 		const isValid = kbbiSet.has(userWord);
 		const isMatchingLastChar = userWord.slice(0, 1) === this.lastChar;
 		const isUsed = this.usedWords.has(userWord);
+
 		if(!isValid){
 			return {success: false, message: "Kata tidak ada dalam kbbi"}
 		}
@@ -133,6 +148,19 @@ export class Game{
 		return {success: true};
 	}
 
+  goAfk(id: string): {success: boolean, message?: string}{
+    const player = this.players.find(p => p.id === id);
+    if(!player){
+      return {success: false, message: "Player tidak valid"}
+    }
+    player.afk = true;
+    const activePlayers = this.players.filter(p => !p.dead && !p.afk && p.id != id);
+    if(activePlayers.length < 2){
+      this.gameEnd();
+    }
+    return {success: true};
+  }
+
 	// jika player afk kembali, maka pinaltinya adalah hp berkurang menyesuaikan hp player aktif yang memiliki hp paling rendah.
 	returnFromAfk(id: string): {success: boolean, message?: string}{
 		const player = this.players.find(p => p.id === id);
@@ -140,7 +168,7 @@ export class Game{
 			return {success: false, message: "Player tidak ada"}
 		}
 
-		const activePlayers = this.players.filter((p) => !p.dead && !p.afk && p.id != id);
+		const activePlayers = this.players.filter(p => !p.dead && !p.afk && p.id != id);
 		const minHp = Math.min(...activePlayers.map(p => p.hp));
 		player.hp = minHp;
 		player.afk = false;
