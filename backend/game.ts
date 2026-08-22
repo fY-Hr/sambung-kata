@@ -8,6 +8,7 @@ export interface Player{
 
 export interface GameConfig{
 	maxHp: 1|2|3;
+  timePerTurn: number;
 }
 
 async function loadKbbiFile(): Promise<string[]>{
@@ -28,6 +29,7 @@ export class Game{
 	gameStatus = false;
 	gameConfig: GameConfig = {
 		maxHp: 2
+    timePerTurn: 10000
 	}
 	lastChar = "";
 	players: Player[] = [];
