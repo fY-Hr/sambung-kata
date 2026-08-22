@@ -28,14 +28,23 @@ export class Game{
 	currentWord = "";
 	gameStatus = false;
 	gameConfig: GameConfig = {
-		maxHp: 2
-    timePerTurn: 10000
+		maxHp: 2,
+    timePerTurn: 10
 	}
 	lastChar = "";
 	players: Player[] = [];
 	turnIndex = 0;
 	usedWords = new Set<string>();
 	winner: Player | null = null;
+
+	private turnTimer: ReturnType<typeof setTimeout> | null = null;
+	private checkWinner(){
+		const activePlayers = this.players.filter(p => !p.dead && !p.afk);
+		if(activePlayers.length <= 1){
+			this.winner = activePlayers[0] || null;
+			this.gameEnd();
+		}
+	}
 
 	startGame(gameConfig: GameConfig){
 		if(this.players.length < 2){
@@ -57,13 +66,35 @@ export class Game{
 		this.currentWord = randomWord;
 		this.lastChar = randomWord.slice(-1);
 
-    if (this.players[0]?.dead || this.players[0]?.afk) {
-      this.nextTurn();
-    }
+		this.turnIndex = -1;
+		this.nextTurn();
+	}
+
+	reduceHp(id: string){
+		if(!this.gameStatus) return;
+		
+		const player = this.players.find(p => p.id == id);
+		if(!player || player.dead || player.afk) return;
+
+		player.hp--;
+
+		if(player.hp <= 0){
+			player.hp = 0;
+			player.dead = true;
+			this.checkWinner();
+		}
+
+		if(this.gameStatus){
+			this.nextTurn();
+		}
 	}
 
 	gameEnd(){
 		this.gameStatus = false;
+		if(this.turnTimer){
+			clearTimeout(this.turnTimer);
+			this.turnTimer = null;
+		}
 	}
 
 	getRandomWord(): string {
@@ -72,7 +103,7 @@ export class Game{
 
 	// add player bisa untuk reconnect
 	addPlayer({ id, name }: { id: string; name: string}): {success: boolean, message?: string}{
-		const existing = this.players[turnIndex]?.id === id;
+		const existing = this.players.find(p => p.id === id);
 		if(existing){
 			return {success: true}
 		}
@@ -92,25 +123,28 @@ export class Game{
 	}
 	
 	nextTurn(){
-		const players = this.players;
-
-		// check afk for first turn 
-		if(this.turnIndex == 0){
-
-			if(players[0]?.afk){
-				this.turnIndex = (this.turnIndex + 1) % players.length;
-			}
-
-			return this.turnIndex;
+		if(this.turnTimer){
+			clearTimeout(this.turnTimer);
+			this.turnTimer = null;
 		}
 
+		let attempts = 0;
     do {
       this.turnIndex = (this.turnIndex + 1) % this.players.length;
-      attempts++;
+			attempts++;
     } while (
-      (this.players[this.turnIndex]?.dead || this.players[this.turnIndex]?.afk) && 
-      attempts < this.players.length
-    );
+			(this.players[this.turnIndex]?.dead || this.players[this.turnIndex]?.afk) &&
+			attempts < this.players.length
+		);
+
+		if(attempts >= this.players.length) return this.turnIndex;
+
+		const currentPlayer = this.players[this.turnIndex];
+		if(currentPlayer && !currentPlayer?.afk && !currentPlayer?.dead){
+			this.turnTimer = setTimeout(() => {
+				this.reduceHp(currentPlayer?.id);
+			}, this.gameConfig.timePerTurn * 1000)
+		}
 
 		return this.turnIndex;
 	}
@@ -122,7 +156,7 @@ export class Game{
       return {success: false, message: "Player tidak valid"}
     }
 
-    if(activePlayer.id !== id){
+    if(!activePlayer || activePlayer.id !== id){
       return {success: false, message: "Bukan giliranmu"}
     }
 
@@ -151,15 +185,24 @@ export class Game{
 	}
 
   goAfk(id: string): {success: boolean, message?: string}{
-    const player = this.players.find(p => p.id === id);
-    if(!player){
+    const playerIndex = this.players.findIndex(p => p.id === id);
+
+    if(playerIndex === -1){
       return {success: false, message: "Player tidak valid"}
     }
-    player.afk = true;
-    const activePlayers = this.players.filter(p => !p.dead && !p.afk && p.id != id);
-    if(activePlayers.length < 2){
-      this.gameEnd();
-    }
+
+		const currentPlayer = this.players[playerIndex];
+		if(!currentPlayer){
+			return {success: false, message: "Player tidak valid"}
+		}
+
+		currentPlayer.afk = true;
+		this.checkWinner();
+
+		if(this.gameStatus && this.turnIndex === playerIndex){
+			this.nextTurn()
+		}
+
     return {success: true};
   }
 
@@ -171,7 +214,7 @@ export class Game{
 		}
 
 		const activePlayers = this.players.filter(p => !p.dead && !p.afk && p.id != id);
-		const minHp = Math.min(...activePlayers.map(p => p.hp));
+		const minHp = activePlayers.length > 0 ? Math.min(...activePlayers.map((p) => p.hp)) : 1;
 		player.hp = minHp;
 		player.afk = false;
 
