@@ -36,6 +36,7 @@ export class Game{
 	turnIndex = 0;
 	usedWords = new Set<string>();
 	winner: Player | null = null;
+	public onStateChange?: () => void;
 
 	private turnTimer: ReturnType<typeof setTimeout> | null = null;
 	private checkWinner(){
@@ -43,6 +44,20 @@ export class Game{
 		if(activePlayers.length <= 1){
 			this.winner = activePlayers[0] || null;
 			this.gameEnd();
+		}
+	}
+
+	getState(){
+		return {
+			gameStatus: this.gameStatus,
+			currentWord: this.currentWord,
+			lastChar: this.lastChar,
+			players: this.players,
+			turnIndex: this.turnIndex,
+			activePlayer: this.players[this.turnIndex] || null,
+			winner: this.winner,
+			gameConfig: this.gameConfig,
+			usedWordsCount: this.usedWords.size
 		}
 	}
 
@@ -80,7 +95,7 @@ export class Game{
 
 		if(player.hp <= 0){
 			player.hp = 0;
-			player.dead = true;
+			player.dead = true
 			this.checkWinner();
 		}
 
@@ -95,6 +110,7 @@ export class Game{
 			clearTimeout(this.turnTimer);
 			this.turnTimer = null;
 		}
+		this.onStateChange?.();
 	}
 
 	getRandomWord(): string {
@@ -119,6 +135,7 @@ export class Game{
 		}
 
 		this.players.push({id, name, hp: this.gameConfig.maxHp, afk: false, dead: false });
+		this.onStateChange?.();
 		return {success: true}
 	}
 	
@@ -137,7 +154,10 @@ export class Game{
 			attempts < this.players.length
 		);
 
-		if(attempts >= this.players.length) return this.turnIndex;
+		if(attempts >= this.players.length) {
+			this.onStateChange?.();
+			return this.turnIndex;
+		}
 
 		const currentPlayer = this.players[this.turnIndex];
 		if(currentPlayer && !currentPlayer?.afk && !currentPlayer?.dead){
@@ -146,10 +166,15 @@ export class Game{
 			}, this.gameConfig.timePerTurn * 1000)
 		}
 
+		this.onStateChange?.();
 		return this.turnIndex;
 	}
 
 	submitAnswer(id: string, answer: string): {success: boolean, message?: string}{
+		if(!this.gameStatus){
+			return {success: false, message: "Tidak bisa mengirim jawaban saat ini"}
+		}
+
     const player = this.players.find(p => p.id === id);
     const activePlayer = this.players[this.turnIndex];
     if(!player){
@@ -201,6 +226,8 @@ export class Game{
 
 		if(this.gameStatus && this.turnIndex === playerIndex){
 			this.nextTurn()
+		} else {
+			this.onStateChange?.();
 		}
 
     return {success: true};
@@ -218,6 +245,7 @@ export class Game{
 		player.hp = minHp;
 		player.afk = false;
 
+		this.onStateChange?.();
 		return {success: true};
 	}
 }
