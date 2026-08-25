@@ -46,7 +46,7 @@ function SambungKataApp() {
   }
 
   return (
-    <div className="min-h-[100dvh] bg-slate-950 text-slate-100 p-4 sm:p-6 flex flex-col items-center justify-start antialiased selection:bg-blue-500 selection:text-white">
+    <div className="min-h-dvh bg-slate-950 text-slate-100 p-4 sm:p-6 flex flex-col items-center justify-start antialiased selection:bg-blue-500 selection:text-white">
       <div className="w-full max-w-md my-auto py-2">
         {/* App Header */}
         <header className="flex items-center justify-between pb-4 mb-5 border-b border-slate-800/80">
