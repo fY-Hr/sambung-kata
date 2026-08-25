@@ -36,6 +36,7 @@ export class Game{
 	turnIndex = 0;
 	usedWords = new Set<string>();
 	winner: Player | null = null;
+	turnDeadline: number = 0;
 	public onStateChange?: () => void;
 
 	private turnTimer: ReturnType<typeof setTimeout> | null = null;
@@ -57,13 +58,15 @@ export class Game{
 			activePlayer: this.players[this.turnIndex] || null,
 			winner: this.winner,
 			gameConfig: this.gameConfig,
-			usedWordsCount: this.usedWords.size
+			usedWordsCount: this.usedWords.size,
+			turnDeadline: this.turnDeadline,
 		}
 	}
 
 	startGame(gameConfig: GameConfig){
-		if(this.players.length < 2){
-			return {success: false, message: "Harus ada minimal 2 player"}
+		const activePlayers = this.players.filter(p => !p.afk);
+		if(activePlayers.length < 2){
+			return {success: false, message: "Harus ada minimal 2 pemain aktif (tidak AFK) untuk memulai game"}
 		}
 
 		const randomWord = this.getRandomWord()
@@ -106,6 +109,7 @@ export class Game{
 
 	gameEnd(){
 		this.gameStatus = false;
+		this.turnDeadline = 0;
 		if(this.turnTimer){
 			clearTimeout(this.turnTimer);
 			this.turnTimer = null;
@@ -155,15 +159,19 @@ export class Game{
 		);
 
 		if(attempts >= this.players.length) {
+			this.turnDeadline = 0;
 			this.onStateChange?.();
 			return this.turnIndex;
 		}
 
 		const currentPlayer = this.players[this.turnIndex];
 		if(currentPlayer && !currentPlayer?.afk && !currentPlayer?.dead){
+			this.turnDeadline = Date.now() + this.gameConfig.timePerTurn * 1000;
 			this.turnTimer = setTimeout(() => {
 				this.reduceHp(currentPlayer?.id);
 			}, this.gameConfig.timePerTurn * 1000)
+		} else {
+			this.turnDeadline = 0;
 		}
 
 		this.onStateChange?.();

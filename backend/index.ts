@@ -70,7 +70,7 @@ const server = Bun.serve<WsData>({
             break;
           }
           case "START_GAME": {
-            const config = message.config || { maxHp: 2, turnTime: 10 };
+            const config = message.config || { maxHp: 2, timePerTurn: 10 };
             const res = game.startGame(config);
 
             if(res && !res.success){
@@ -108,7 +108,12 @@ const server = Bun.serve<WsData>({
 
               broadcastState(server);
             }
-            break
+            break;
+          }
+          case "END_GAME": {
+            game.gameEnd();
+            broadcastState(server);
+            break;
           }
         }
       } catch (err) {
