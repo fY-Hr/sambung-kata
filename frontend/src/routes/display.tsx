@@ -36,11 +36,11 @@ function HostDisplayApp() {
     // 1. Game Started
     if (isGameRunning && !prevGameStatusRef.current) {
       sounds.playStart()
-      triggerVisualFeedback('🚀 GAME DIMULAI!')
+      triggerVisualFeedback('GAME DIMULAI')
     }
     else if (winnerId && winnerId !== prevWinnerRef.current) {
       sounds.playWin()
-      triggerVisualFeedback(`🏆 PEMENANG: ${gameState.winner?.name}!`)
+      triggerVisualFeedback(`PEMENANG: ${gameState.winner?.name}`)
     }
     else if (
       isGameRunning &&
@@ -48,7 +48,7 @@ function HostDisplayApp() {
       totalHp < prevTotalHpRef.current
     ) {
       sounds.playWrong()
-      triggerVisualFeedback('❌ TETOTT! (Waktu Habis / HP Berkurang)')
+      triggerVisualFeedback('TETOTT (Waktu Habis / HP Berkurang)')
     }
     else if (
       isGameRunning &&
@@ -57,7 +57,7 @@ function HostDisplayApp() {
       currentWord !== prevWordRef.current
     ) {
       sounds.playCorrect()
-      triggerVisualFeedback('🔔 TINUNG! (Jawaban Benar)')
+      triggerVisualFeedback('TINUNG (Jawaban Benar)')
     }
 
     prevGameStatusRef.current = isGameRunning
@@ -80,26 +80,27 @@ function HostDisplayApp() {
   const handleManualEndGame = () => {
     if (window.confirm('Yakin ingin mengakhiri permainan sekarang secara manual?')) {
       endGame()
-      triggerVisualFeedback('⏹️ GAME DIAKHIRI OLEH HOST')
+      triggerVisualFeedback('GAME DIAKHIRI OLEH HOST')
     }
   }
 
   const hostIp = typeof window !== 'undefined' ? window.location.hostname : 'localhost'
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white font-sans p-6 sm:p-8 flex flex-col justify-between">
+    <div className="min-h-dvh bg-slate-950 text-white font-sans p-6 sm:p-8 flex flex-col justify-between antialiased selection:bg-blue-500 selection:text-white">
       <header className="flex flex-wrap gap-4 items-center justify-between pb-6 border-b border-slate-800">
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2 text-slate-100">
-              📺 <span>SAMBUNG KATA</span>
+              <span className="text-blue-500">◈</span>
+              <span>SAMBUNG KATA</span>
             </h1>
             <span className="px-2.5 py-1 text-xs font-bold uppercase tracking-wider bg-emerald-950 text-emerald-400 border border-emerald-800 rounded-full">
               HOST DISPLAY
             </span>
           </div>
           <p className="text-slate-400 text-sm mt-1">
-            📱 Pemain buka browser di HP: <strong className="text-blue-400 font-bold underline">http://{hostIp}:3000</strong>
+            Pemain buka browser di HP: <strong className="text-blue-400 font-bold underline font-mono">http://{hostIp}:3000</strong>
           </p>
         </div>
 
@@ -109,7 +110,7 @@ function HostDisplayApp() {
               onClick={handleManualEndGame}
               className="px-3.5 py-2 bg-rose-700 hover:bg-rose-600 active:scale-95 text-white font-black text-xs rounded-xl transition cursor-pointer shadow-lg shadow-rose-900/50 flex items-center gap-1.5 border border-rose-500 animate-pulse mr-2"
             >
-              ⏹️ <span>Akhiri Game</span>
+              <span>Akhiri Game</span>
             </button>
           )}
 
@@ -117,13 +118,13 @@ function HostDisplayApp() {
             onClick={() => sounds.playCorrect()}
             className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold text-xs rounded-xl transition cursor-pointer shadow-sm flex items-center gap-1.5"
           >
-            🔔 <span>Test Tinung</span>
+            <span>Test Tinung</span>
           </button>
           <button
             onClick={() => sounds.playWrong()}
             className="px-3.5 py-2 bg-rose-600 hover:bg-rose-500 active:scale-95 text-white font-bold text-xs rounded-xl transition cursor-pointer shadow-sm flex items-center gap-1.5"
           >
-            ❌ <span>Test Tetott</span>
+            <span>Test Tetott</span>
           </button>
           <button
             onClick={toggleMute}
@@ -131,7 +132,7 @@ function HostDisplayApp() {
               isMuted ? 'bg-slate-700 hover:bg-slate-600 text-slate-300' : 'bg-blue-600 hover:bg-blue-500 text-white'
             }`}
           >
-            {isMuted ? '🔇 Unmute' : '🔊 Mute Audio'}
+            {isMuted ? 'Unmute Audio' : 'Mute Audio'}
           </button>
         </div>
       </header>
@@ -152,11 +153,10 @@ function HostDisplayApp() {
 
       {!gameState?.gameStatus && (
         <main className="flex-1 flex flex-col justify-center max-w-4xl mx-auto w-full py-8 text-center">
-          {/* Winner Banner */}
           {gameState?.winner && (
             <div className="bg-emerald-950/80 border-2 border-emerald-500 rounded-3xl p-8 mb-8 shadow-2xl shadow-emerald-950">
               <div className="text-sm font-bold uppercase tracking-widest text-emerald-400 mb-2">
-                🏆 Pemenang Ronde Sebelumnya
+                Pemenang Ronde Sebelumnya
               </div>
               <div className="text-4xl sm:text-6xl font-black text-amber-300 tracking-tight">
                 {gameState.winner.name}
@@ -198,7 +198,7 @@ function HostDisplayApp() {
                 ))
               ) : (
                 <div className="col-span-full py-8 text-slate-500 font-medium">
-                  Belum ada pemain yang masuk. Minta temanmu membuka <strong className="text-slate-300">http://{hostIp}:3000</strong> di HP!
+                  Belum ada pemain yang masuk. Buka <strong className="text-slate-300 font-mono">http://{hostIp}:3000</strong> di HP
                 </div>
               )}
             </div>
@@ -246,7 +246,7 @@ function HostDisplayApp() {
                     disabled={activePlayersCount < 2}
                     className="px-10 py-4 text-xl font-black bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white rounded-2xl shadow-xl transition cursor-pointer disabled:bg-slate-800 disabled:text-slate-600 disabled:cursor-not-allowed disabled:scale-100"
                   >
-                    🚀 MULAI GAME{' '}
+                    MULAI GAME{' '}
                     {activePlayersCount < 2
                       ? '(Minimal 2 Pemain Aktif / Tidak AFK)'
                       : ''}
@@ -260,20 +260,19 @@ function HostDisplayApp() {
 
       {gameState?.gameStatus && (
         <main className="flex-1 flex flex-col justify-center max-w-5xl mx-auto w-full py-6 space-y-6">
-          {/* Main Stage: Current Word */}
           <div className="bg-slate-900 border-2 border-slate-800 rounded-3xl p-8 sm:p-12 text-center shadow-2xl">
             <div className="text-xs sm:text-sm font-bold uppercase tracking-widest text-slate-400">
               Kata Saat Ini (Kata ke-{gameState.usedWordsCount})
             </div>
             <div className="text-5xl sm:text-7xl md:text-8xl font-black tracking-wider uppercase my-4 sm:my-6 flex items-center justify-center flex-wrap gap-1">
               <span>{gameState.currentWord.slice(0, -1)}</span>
-              <span className="text-red-400 bg-red-950/70 px-3 py-1 rounded-2xl border border-red-500/40 underline decoration-4 underline-offset-8">
+              <span className="text-rose-400 bg-rose-950/70 px-3 py-1 rounded-2xl border border-rose-500/40 underline decoration-4 underline-offset-8">
                 {gameState.lastChar}
               </span>
             </div>
             <div className="text-base sm:text-2xl text-amber-300 font-semibold flex items-center justify-center gap-2">
               <span>Huruf awal kata berikutnya:</span>
-              <strong className="text-2xl sm:text-3xl uppercase text-red-400 font-black px-2 py-0.5 bg-red-950/50 rounded-lg">
+              <strong className="text-2xl sm:text-3xl uppercase text-rose-400 font-black px-2 py-0.5 bg-rose-950/50 rounded-lg">
                 "{gameState.lastChar}"
               </strong>
             </div>
@@ -288,21 +287,20 @@ function HostDisplayApp() {
           >
             <div className="flex flex-wrap items-center justify-between gap-4 mb-3">
               <div className="text-xl sm:text-3xl font-black text-blue-100 flex items-center gap-2">
-                <span>👉 GILIRAN:</span>
-                <span className="text-yellow-300 underline decoration-wavy decoration-yellow-400">
+                <span>GILIRAN:</span>
+                <span className="text-amber-300 underline decoration-wavy decoration-amber-400">
                   {gameState.players[gameState.turnIndex]?.name || '...'}
                 </span>
               </div>
 
               {timeLeft > 0 && (
                 <div
-                  className={`px-4 py-1.5 rounded-2xl text-lg sm:text-2xl font-black flex items-center gap-2 ${
+                  className={`px-4 py-1.5 rounded-2xl text-lg sm:text-2xl font-black font-mono flex items-center gap-2 ${
                     timeLeft <= 3
                       ? 'bg-rose-600 text-white animate-bounce shadow-lg shadow-rose-600/40'
                       : 'bg-amber-400 text-slate-950'
                   }`}
                 >
-                  <span>⏱️</span>
                   <span>{timeLeft}s</span>
                 </div>
               )}
@@ -340,7 +338,7 @@ function HostDisplayApp() {
                         : 'bg-slate-900 border-slate-800'
                     }`}
                   >
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center justify-between mb-3">
                       <strong className="text-base sm:text-lg font-bold text-slate-100 truncate">
                         {p.name}
                       </strong>
@@ -355,9 +353,21 @@ function HostDisplayApp() {
                         </span>
                       )}
                     </div>
-                    <div className="text-xl tracking-widest">
-                      {'❤️'.repeat(p.hp)}
-                      {'🖤'.repeat(Math.max(0, (gameState.gameConfig?.maxHp || 2) - p.hp))}
+                    
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-mono font-bold text-slate-400">HP</span>
+                      <div className="flex items-center gap-1.5">
+                        {Array.from({ length: gameState.gameConfig?.maxHp || 2 }).map((_, i) => (
+                          <span
+                            key={i}
+                            className={`w-3 h-3 rounded-full transition-all ${
+                              i < p.hp
+                                ? 'bg-rose-500 shadow-sm shadow-rose-500/50'
+                                : 'bg-slate-800 border border-slate-700'
+                            }`}
+                          />
+                        ))}
+                      </div>
                     </div>
                   </div>
                 )
@@ -369,7 +379,6 @@ function HostDisplayApp() {
                 onClick={handleManualEndGame}
                 className="px-5 py-2.5 bg-rose-800/80 hover:bg-rose-700 active:scale-95 text-rose-100 font-bold text-sm rounded-xl transition cursor-pointer flex items-center gap-2 border border-rose-600/60 shadow-lg shadow-rose-950"
               >
-                <span>⏹️</span>
                 <span>Hentikan & Akhiri Permainan</span>
               </button>
             </div>
@@ -378,10 +387,8 @@ function HostDisplayApp() {
       )}
 
       <footer className="text-center text-xs text-slate-600 pt-6">
-        Sambung Kata • Local LAN Multiplayer Game
+        Sambung Kata (LAN Multiplayer Game)
       </footer>
     </div>
   )
 }
-
-
